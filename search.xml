@@ -1,6 +1,95 @@
 <?xml version="1.0" encoding="utf-8"?>
 <search>
   <entry>
+    <title>BUUCTF的Dig the way - 栈溢出</title>
+    <url>/2022/02/27/BUUCTF%E7%9A%84Dig-the-way-%E6%A0%88%E6%BA%A2%E5%87%BA/</url>
+    <content><![CDATA[<h2 id="BUUCTF的Dig-the-way-栈溢出"><a href="#BUUCTF的Dig-the-way-栈溢出" class="headerlink" title="BUUCTF的Dig the way - 栈溢出"></a>BUUCTF的Dig the way - 栈溢出</h2><p>这是一道栈溢出的题目</p>
+<p>进入到主函数里面</p>
+<p>首先就是读取data之中数据的代码</p>
+<p><img src="/images/BUUCTF%E7%9A%84Dig-the-way-%E6%A0%88%E6%BA%A2%E5%87%BA/image-20220227123156345.png" alt="image-20220227123156345"></p>
+<p>通过代码我们可以知道这个地方并没有对数据的写入长度进行限制</p>
+<h4 id="fseek函数"><a href="#fseek函数" class="headerlink" title="fseek函数"></a>fseek函数</h4><p>fseek()函数可以移动文件的读写指针到指定的位置，即移动当前文件的位置指针，其原型为：<br>  int fseek(FILE * stream, long offset, int fromwhere);</p>
+<p>【参数】stream为文件指针，offset为偏移量，fromwhere为指针的起始位置。</p>
+<p>参数 offset 为根据参数 fromwhere 来移动读写位置的位移数。参数 fromwhere 为下列其中一种：</p>
+<ul>
+<li>SEEK_SET：从距文件开头 offset 位移量为新的读写位置；</li>
+<li>SEEK_CUR：以目前的读写位置往后增加 offset 个位移量；</li>
+<li>SEEK_END：将读写位置指向文件尾后再增加 offset 个位移量。</li>
+</ul>
+<p>例子：</p>
+<ul>
+<li>将读写位置移动到文件开头：fseek(fp, 0, SEEK_SET);</li>
+<li>将读写位置移动到文件尾时：fseek(fp, 0, SEEK_END);</li>
+<li>将读写位置动到离文件开头100字节处：fseek(fp,100L, SEEK_SET);</li>
+<li>将读写指针移动到离文件当前位置100字节处：fseek(fp,100L, SEEK_CUR);</li>
+<li>将读写指针退回到离文件结尾100字节处：fseek(fp, -100L, SEEK_END);</li>
+</ul>
+<h4 id="ftell函数"><a href="#ftell函数" class="headerlink" title="ftell函数"></a>ftell函数</h4><p>用 法: <code>long ftell(FILE *fp);</code><br>描 述: 返回当前文件指针位置。这个位置是当前文件指针相对于文件开头的位移量。<br>返回值:返回文件指针的位置，若出错则返回-1L。<br>参数：文件指针。</p>
+<h4 id="fread函数"><a href="#fread函数" class="headerlink" title="fread函数"></a>fread函数</h4><p>用 法: size_t fread( void *buffer, size_t size, size_t count, FILE *stream ) ;<br>描 述: fread()用来从文件流中读取数据。参数stream为已打开的文件指针，参数buffer指向欲存放读取进来的数据空间，读取的字节数以参数size * count来决定。<br>返回值: 返回实际读取到的count数目，如果此值比参数count来得小，则代表可能读到了文件尾了或者有错误发生(前者几率大)，这时必须用feof()或ferror()来决定发生什么情况。<br>参数：</p>
+<p>buffer ：读取的数据存放的内存的指针（可以是数组，也可以是新开辟的空间，buffer就是一个索引）；<br>size ： 每次读取的字节数 ；<br>count ：读取次数 ；<br>strean：要读取的文件的指针；</p>
+<h4 id="三个函数的解析"><a href="#三个函数的解析" class="headerlink" title="三个函数的解析"></a>三个函数的解析</h4><h5 id="func0"><a href="#func0" class="headerlink" title="func0"></a>func0</h5><p>交换栈中的两个数据</p>
+<p><img src="/images/BUUCTF%E7%9A%84Dig-the-way-%E6%A0%88%E6%BA%A2%E5%87%BA/image-20220227113310818.png" alt="image-20220227113300364"></p>
+<h5 id="func1"><a href="#func1" class="headerlink" title="func1"></a>func1</h5><p>这个函数的返回值小于等于2</p>
+<p><img src="/images/BUUCTF%E7%9A%84Dig-the-way-%E6%A0%88%E6%BA%A2%E5%87%BA/image-20220227113437073.png" alt="image-20220227113437073"></p>
+<h5 id="func2"><a href="#func2" class="headerlink" title="func2"></a>func2</h5><p>这个函数的返回值大于等于2</p>
+<p><img src="/images/BUUCTF%E7%9A%84Dig-the-way-%E6%A0%88%E6%BA%A2%E5%87%BA/image-20220227113508616.png" alt="image-20220227113508616"></p>
+<p>现在我们需要使v11等于0 ，程序之中给v11赋值的是func2函数，但是该函数的返回值一定是大于等于2的，显示不可能实现v11= 0</p>
+<p>但是在上面的三个函数之中我们可以看到func1的返回值能够等于0 ，所以需要使用func0这个函数调换栈中func1和func2这两个函数的位置</p>
+<h4 id="交换func1函数和func0函数位置"><a href="#交换func1函数和func0函数位置" class="headerlink" title="交换func1函数和func0函数位置"></a>交换func1函数和func0函数位置</h4><p>运行func0函数时，传入的参数v12和v13是初始值，我们只需将表示func1地址的v15 和 表示func2地址的v16交换</p>
+<p>v15的地址是 v8+4*7    v16的地址是v8+4*8 所以需要将v12 和 v13的值设为7 和 8 ；</p>
+<p>按道理来说7和8的顺序没有关系，但是实际操作发现7和8的赋值顺序不一样，得到的flag是不一样的，只有把v12 = 7和 v13 = 8才可以得到正确的flag</p>
+<p><img src="/images/BUUCTF%E7%9A%84Dig-the-way-%E6%A0%88%E6%BA%A2%E5%87%BA/image-20220227122635003.png" alt="image-20220227122635003"></p>
+<p><img src="/images/BUUCTF%E7%9A%84Dig-the-way-%E6%A0%88%E6%BA%A2%E5%87%BA/image-20220227122638492.png" alt="image-20220227122638492"></p>
+<h4 id="使得func1的返回值为0"><a href="#使得func1的返回值为0" class="headerlink" title="使得func1的返回值为0"></a>使得func1的返回值为0</h4><p>运行func2时 v12=2  v13=3 ，所以函数之中进行运算的两个数字是v10和v11，v10的值是2 ，若想要这个函数的返回值是0，需要将v10置为-1 即0xffffffff</p>
+<p><img src="/images/BUUCTF%E7%9A%84Dig-the-way-%E6%A0%88%E6%BA%A2%E5%87%BA/image-20220227123021830.png" alt="image-20220227123021830"></p>
+<h4 id="data文件的构造"><a href="#data文件的构造" class="headerlink" title="data文件的构造"></a>data文件的构造</h4><p>data数据传入的首地址是v7，因为没有设置传入数据的长度，所以可以传入无限制大小的数据，多出来的部分会对后面的数据进行覆盖，v7的长度是20 ，v10的位置是 20+2*4 = 28  v11的位置是 20+3*4=32  v12的位置是 20+4*4=36 v13的位置是 20+5*4=40 总的数据长度是44</p>
+<p>用010构造数据，并且保存为data，和exe文件放到同一目录之下，运行程序</p>
+<p><img src="/images/BUUCTF%E7%9A%84Dig-the-way-%E6%A0%88%E6%BA%A2%E5%87%BA/image-20220227130028183.png" alt="image-20220227130028183"></p>
+<p>运行的结果：</p>
+<p><img src="/images/BUUCTF%E7%9A%84Dig-the-way-%E6%A0%88%E6%BA%A2%E5%87%BA/image-20220227130059588.png" alt="image-20220227130059588"></p>
+<p>所以得到的flag是</p>
+<p>flag{8cda1bdb68a72a392a3968a71bdb8cda}</p>
+<h1 id="栈溢出"><a href="#栈溢出" class="headerlink" title="栈溢出"></a>栈溢出</h1><h3 id="介绍"><a href="#介绍" class="headerlink" title="介绍"></a>介绍</h3><blockquote>
+<p>栈溢出是指在栈内写入超出长度限制的数据，从而破坏程序运行甚至获得系统控制权的攻击手段。</p>
+<p>实现栈溢出，要满足两个条件。第一，程序要有向栈内写入数据的行为；第二，程序并不限制写入数据的长度。如果想用栈溢出来执行攻击指令，就要在溢出数据内包含攻击指令的内容或地址，并且要将程序控制权交给该指令。攻击指令可以是自定义的指令片段，也可以利用系统内已有的函数及指令。</p>
+</blockquote>
+<h3 id="函数状态主要涉及三个寄存器-–-esp，ebp，eip"><a href="#函数状态主要涉及三个寄存器-–-esp，ebp，eip" class="headerlink" title="函数状态主要涉及三个寄存器 – esp，ebp，eip"></a>函数状态主要涉及三个寄存器 – esp，ebp，eip</h3><ul>
+<li><p><code>esp</code>用来存储函数调用栈的栈顶地址，在压栈和退栈时发生变化</p>
+</li>
+<li><p><code>ebp</code>用来存储当前函数状态的基地址，在函数运行时不变，可以用来索引确定函数参数或局部变量的位置。</p>
+</li>
+<li><p><code>eip</code> 用来存储即将执行的程序指令的地址，cpu依照 eip的存储内容读取指令并执行，eip 随之指向相邻的下一条指令，如此反复，程序就得以连续执行指令。</p>
+<p>使用这三个寄存器实现 将调用函数（caller）的状态保存起来，同时创建被调用函数（callee）的状态。</p>
+</li>
+</ul>
+<h3 id="栈溢出攻击"><a href="#栈溢出攻击" class="headerlink" title="栈溢出攻击"></a>栈溢出攻击</h3><blockquote>
+<p>当函数正在执行内部指令的过程中我们无法拿到程序的控制权，只有在发生函数调用或者结束函数调用时，程序的控制权会在函数状态之间发生跳转，这时才可以通过修改函数状态来实现攻击。而控制程序执行指令最关键的寄存器就是<br>eip。所以我们的目标就是让 eip 载入攻击指令的地址。 首先，在退栈过程中，返回地址会被传给<br>eip，所以我们只需要让溢出数据用攻击指令的地址来覆盖返回地址就可以了。其次，我们可以在溢出数据内包含一段攻击指令，也可以在内存其他位置寻找可用的攻击指令。</p>
+</blockquote>
+<p>四种方法归类：</p>
+<p>1.修改返回地址，让其指向溢出数据中的一段指令（shellcode） </p>
+<p>2.修改返回地址，让其指向内存中已有的某个函数（return2libc）</p>
+<p> 3.修改返回地址，让其指向内存中已有的一段指令（ROP） </p>
+<p>4.修改某个被调用函数的地址，让其指向另一个函数（hijack GOT）</p>
+<p><img src="/images/BUUCTF%E7%9A%84Dig-the-way-%E6%A0%88%E6%BA%A2%E5%87%BA/image-20220227134449755.png" alt="image-20220227134449755"></p>
+<h3 id="寄存器"><a href="#寄存器" class="headerlink" title="寄存器"></a>寄存器</h3><p>32位x86架构下的通用寄存器包括一般寄存器（eax、ebx、ecx、edx），索引寄存器（esi、edi），以及堆栈指针寄存器（esp、ebp）</p>
+<ul>
+<li><p>eax被称为累加寄存器（Accumulator），用以进行算数运算和返回函数结果等。</p>
+</li>
+<li><p>ebx被称为基址寄存器（Base），在内存寻址时（比如数组运算）用以存放基地址。</p>
+</li>
+<li><p>ecx被称为记数寄存器（Counter），用以在循环过程中记数。</p>
+</li>
+<li><p>edx 被称为数据寄存器（Data），常配合 eax 一起存放运算结果等数据。</p>
+</li>
+<li><p>esi 指向要处理的数据地址（Source Index）</p>
+</li>
+<li><p>edi指向存放处理结果的数据地址（Destination Index）</p>
+</li>
+</ul>
+<p>参考文章： <a href="https://blog.csdn.net/weixin_43092232/article/details/96902468">https://blog.csdn.net/weixin_43092232/article/details/96902468</a></p>
+]]></content>
+  </entry>
+  <entry>
     <title>VNCTF_2022</title>
     <url>/2022/02/25/VNCTF-2022/</url>
     <content><![CDATA[<h2 id="VN2022"><a href="#VN2022" class="headerlink" title="VN2022"></a>VN2022</h2><h4 id="cm狗"><a href="#cm狗" class="headerlink" title="cm狗"></a>cm狗</h4><p>用jadx软件载入这个apk文件</p>
